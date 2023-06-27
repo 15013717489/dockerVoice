@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 
 /**
@@ -37,31 +38,38 @@ public class NeuromodulationTherapyServiceImpl implements NeuromodulationTherapy
      * 左耳处理
      */
     public String leftear(LeftVoice leftVoice) {
+        File[] mavFiles = new File[2];
+        List<CompletableFuture<Void>> futureList = new ArrayList<>();
         File output = new File( "output.wav" );
-        File mavFile1 = null;
-        File mavFile2 = null;
         //处理音轨1
         if(leftVoice.getSoundTrack1()!=null) {
             SoundTrack soundTrack1 = leftVoice.getSoundTrack1();
-            mavFile1 = soundGeneratorService.generateSound(soundTrack1, leftVoice.getAudioDuration(), "mavFile1.wav");
+            futureList.add(CompletableFuture.runAsync(() -> {
+                mavFiles[0] = soundGeneratorService.generateSound(soundTrack1, leftVoice.getAudioDuration(), "mavFile1.wav");
+            }));
         }
         //处理音轨2
         if(leftVoice.getSoundTrack2()!=null){
             SoundTrack soundTrack2=leftVoice.getSoundTrack2();
-            mavFile2 =soundGeneratorService.generateSound(soundTrack2,leftVoice.getAudioDuration(),"mavFile2.wav");
+            futureList.add(CompletableFuture.runAsync(() -> {
+                mavFiles[1] = soundGeneratorService.generateSound(soundTrack2, leftVoice.getAudioDuration(), "mavFile2.wav");
+            }));
         }
-        if(mavFile1!=null&&mavFile2!=null){
-            //soundMixer(output,mavFile1, mavFile2);
-            String[] audioFiles = {mavFile1.getPath(),mavFile2.getPath()};//文件名
-            DecimalFormat decimalFormat = new DecimalFormat("#0.00");
-            String volume1=decimalFormat.format( leftVoice.getSoundTrack1().getVolume()/ 100.0f);
-            String volume2=decimalFormat.format( leftVoice.getSoundTrack2().getVolume()/ 100.0f);
-            String[] individualVolumes = {volume1,volume2};//子音量值
-            ffmpegMixer(leftVoice.getVolume(),audioFiles,individualVolumes,output.getPath());
-        }else if(mavFile1!=null){
-            output=mavFile1;
-        }else if(mavFile1!=null){
-            output=mavFile2;
+        DecimalFormat decimalFormat = new DecimalFormat("#0.00");
+        CompletableFuture.allOf(futureList.toArray(new CompletableFuture[0])).join(); // 等待所有音轨处理完成
+        String[] audioFiles = new String[2];
+        String[] individualVolumes = new String[2];
+        // 创建混音
+        if (mavFiles[0] != null && mavFiles[1] != null) {
+            audioFiles[0] = mavFiles[0].getPath();
+            audioFiles[1] = mavFiles[1].getPath();
+            individualVolumes[0] = decimalFormat.format(leftVoice.getSoundTrack1().getVolume() / 100.0f);
+            individualVolumes[1] = decimalFormat.format(leftVoice.getSoundTrack2().getVolume() / 100.0f);
+            ffmpegMixer(leftVoice.getVolume(), audioFiles, individualVolumes, output.getPath());
+        } else if (mavFiles[0] != null) {
+            output = mavFiles[0];
+        } else if (mavFiles[1] != null) {
+            output = mavFiles[1];
         }
 
         return output.getPath();

@@ -66,16 +66,17 @@ public class SoundGeneratorServiceImpl implements SoundGeneratorService {
                 //啭音
                 buffer = generateSweepTone(sampleRate, frequency1, frequency2, duration, amplitude);
             }
-
             // 将缓冲区的音频数据保存到WAV文件
             ByteArrayInputStream bais = new ByteArrayInputStream(buffer);
             AudioInputStream audioInputStream = new AudioInputStream(bais, audioFormat, numSamples);
+            Instant time1 = Instant.now();
+            System.out.println(fileName+"音频生成成功花费时间：" + Duration.between(startTime, time1).toMillis());
             // 将音频数据保存到临时WAV文件
             wavFile = new File(fileName);
             AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, wavFile);
             audioInputStream.close();
-            Instant time1 = Instant.now();
-            System.out.println(fileName+"音频保存成功：" + wavFile.getAbsolutePath() + "花费时间：" + Duration.between(startTime, time1).toMillis());
+            Instant time2 = Instant.now();
+            System.out.println(fileName+"音频持久化成功：" + wavFile.getAbsolutePath() + "花费时间：" + Duration.between(time1, time2).toMillis());
 
         } catch (Exception e) {
             e.printStackTrace();

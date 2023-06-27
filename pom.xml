@@ -65,11 +65,11 @@
             <version>3.3.1</version>
         </dependency>
 
-        <dependency>
+        <!--<dependency>
             <groupId>com.jsyn</groupId>
             <artifactId>jsyn</artifactId>
             <version>20170815</version>
-        </dependency>
+        </dependency>-->
 
 
         <dependency>
@@ -83,11 +83,11 @@
             <version>2.5</version>
         </dependency>
 
-        <dependency>
+        <!--<dependency>
             <groupId>net.beadsproject</groupId>
             <artifactId>beads</artifactId>
             <version>3.2</version>
-        </dependency>
+        </dependency>-->
 
     </dependencies>
 
